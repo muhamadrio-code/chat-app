@@ -19,7 +19,7 @@ export default function LandingScreen() {
                     navigation.navigate("Daftar");
                     }} mode='outlined'>Daftar</Button>
                     <Button style={styles.btnLogin} onPress={() => {
-                    navigation.navigate("Daftar");
+                    navigation.navigate("Login");
                     }} mode='outlined' color="#fff">Login</Button>
                 </View>
             </ImageBackground>

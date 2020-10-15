@@ -10,10 +10,8 @@ export default function LandingScreen() {
     const navigation = useNavigation();
 
     const [form, setForm] = useState({
-        nama: '',
         email: '',
         pasword: '',
-        ulangi_pasword: ''
     });
 
     const [error, setError] = useState({});
@@ -33,10 +31,6 @@ export default function LandingScreen() {
     const validate = () => {
         let newErrors = {};
 
-        if (!form.nama) {
-            newErrors.nama = "Nama wajib diisi";
-        }
-
         if (!form.email) {
             newErrors.email = "Email wajib diisi";
         } else if (!isEmail(form.email)) {
@@ -47,18 +41,10 @@ export default function LandingScreen() {
             newErrors.password = "Password wajib diisi";
         }
 
-        if (!form.ulangi_password) {
-            newErrors.ulangi_password = "Ulangi Password wajib diisi";
-        } else if (form.ulangi_password !== form.password) {
-            newErrors.ulangi_password = "Ulangi Password tidak sama dengan Password";
-        }
-
         return newErrors;
     };
 
-    const handleSubmit = async () => {
-
-
+   const handleSubmit = async () => {
         const findErrors = validate();
 
         if (Object.values(findErrors).some(message => message !== "")) {
@@ -66,39 +52,29 @@ export default function LandingScreen() {
         } else {
             setIsSubmitted(true);
             try {
-                const { user } = await auth.createUserWithEmailAndPassword(
-                    form.email,
-                    form.password
-                );
-
-                await firestore.doc(`/profiles/${user.uid}`).set({
-                    nama: form.nama,
-                    createdAt: FieldValue.serverTimestamp()
-                });
+                await auth.signInWithEmailAndPassword(form.email, form.password);
             } catch (e) {
                 let newError = {};
                 setIsSubmitted(false);
                 switch (e.code) {
-                    case "auth/email-already-in-use":
-                        newError.email = "Email sudah terdaftar";
+                    case "auth/user-not-found":
+                        newError.email = "Email tidak terdaftar";
                         break;
                     case "auth/invalid-email":
                         newError.email = "Email tidak valid";
                         break;
-                    case "auth/weak-password":
-                        newError.password = "Password lemah";
+                    case "auth/wrong-password":
+                        newError.password = "Password salah";
                         break;
-                    case "auth/operation-not-allowed":
-                        newError.email = "Metode email dan password tidak didukung";
+                    case "auth/user-disabled":
+                        newError.email = "Pengguna di blokir";
                         break;
                     default:
                         newError.email = "Terjadi kesalahan silahkan coba lagi";
                         break;
                 }
-
                 setError(newError);
             }
-
         }
     };
 
@@ -112,18 +88,8 @@ export default function LandingScreen() {
             </View>
             <View style={styles.content}>
                 <Surface style={styles.surface}>
-                    <Title style={styles.title}>Buat Akun Baru</Title>
+                    <Title style={styles.title}>Login</Title>
                     <View style={styles.textInput}>
-                        <TextInput
-                            label="Username*"
-                            placeholder="masukan username..."
-                            mode="outlined"
-                            dense
-                            onChangeText={handleChange("nama")}
-                            value={form.nama}
-                            error={error.nama ? true:false}
-                        />
-                        <HelperText type="error" visible={error.nama ? true : false}>{error.nama}</HelperText>
                         <TextInput
                             label="Email*"
                             placeholder="masukan Email..."
@@ -145,31 +111,27 @@ export default function LandingScreen() {
                             error={error.password ? true:false}
                         />
                         <HelperText type="error" visible={error.password ? true : false}>{error.password}</HelperText>
-                        <TextInput
-                            label="Ulangi Password*"
-                            placeholder="Ulangi Password..."
-                            mode="outlined"
-                            dense
-                            secureTextEntry
-                            onChangeText={handleChange("ulangi_password")}
-                            value={form.ulangi_password}
-                            error={error.ulangi_password ? true:false}
-                        />
-                        <HelperText type="error" visible={error.ulangi_password ? true : false}>{error.ulangi_password}</HelperText>
                         <View style={styles.buttons}>
-                            <Button
-                                // style={styles.btnDaftar}
+                             <Button
+                                // style={styles.btnLogin}
                                 mode="contained"
-                                onPress={handleSubmit}
                                 loading={isSubmitted}
-                            >Daftar</Button>
-                            <Button
-                                style={styles.btnLogin}
-                                mode="outlined"
-                                onPress={() => { navigation.navigate("Login") }}
+                                onPress={handleSubmit}
                             >Login</Button>
+                            <Button
+                                style={styles.btnDaftar}
+                                mode="outlined"
+                                onPress={() => { navigation.navigate('Daftar')}}
+                            >Daftar</Button>
                         </View>
                     </View >
+                    <View >
+                        <Button
+                            compact
+                            onPress={() => navigation.navigate("LupaPassword")}
+                            style={styles.lupaPassword}
+                            >Lupa Password ?</Button>
+                    </View>
                 </Surface>
                </View>
         </View>
@@ -222,8 +184,13 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
     },
     
-    btnLogin: {
+    btnDaftar: {
+        borderWidth: 1,
         borderColor: theme.colors.primary,
-        borderWidth: 1
+    },
+    lupaPassword: {
+        alignSelf: "flex-start",
+        marginTop: 16,
+        marginBottom: 16
     }
 })
